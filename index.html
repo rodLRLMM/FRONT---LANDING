@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SICA-IoT Industrial | Monitoreo ambiental inteligente</title>
+<meta name="description" content="Sistema web de monitoreo y control automatizado de CO₂, temperatura y humedad en naves industriales con IoT y PostgreSQL.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0f14;--bg2:#101821;--card:#141e29;--line:#1f2d3b;--tx:#e6edf3;--mut:#8b9bab;--ac:#2ee6a6;--ac2:#3ba8ff;--warn:#ffb020;--bad:#ff5d5d}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--tx);line-height:1.6;overflow-x:hidden}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;line-height:1.15}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+section{padding:96px 0}
+.tag{display:inline-block;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ac);font-weight:600;margin-bottom:14px}
+h2{font-size:clamp(1.8rem,4vw,2.6rem);margin-bottom:16px}
+.lead{color:var(--mut);max-width:640px;font-size:1.05rem}
+.grad{background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* nav */
+nav{position:fixed;top:0;width:100%;z-index:50;background:rgba(10,15,20,.75);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{font-family:'Space Grotesk';font-weight:700;font-size:1.1rem;display:flex;align-items:center;gap:10px}
+.logo i{width:10px;height:10px;border-radius:50%;background:var(--ac);box-shadow:0 0 12px var(--ac);animation:pulse 2s infinite}
+nav ul{display:flex;gap:28px;list-style:none;font-size:.9rem;color:var(--mut)}
+nav ul a:hover{color:var(--tx)}
+.btn{display:inline-block;padding:12px 24px;border-radius:10px;font-weight:600;font-size:.95rem;transition:.25s}
+.btn.p{background:linear-gradient(90deg,var(--ac),var(--ac2));color:#04110c}
+.btn.p:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(46,230,166,.3)}
+.btn.g{border:1px solid var(--line);color:var(--tx)}
+.btn.g:hover{border-color:var(--ac);color:var(--ac)}
+
+/* hero */
+.hero{padding:150px 0 90px;position:relative;background:radial-gradient(700px 400px at 80% 10%,rgba(59,168,255,.14),transparent),radial-gradient(600px 400px at 10% 0,rgba(46,230,166,.12),transparent)}
+.hero .wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:center}
+.hero h1{font-size:clamp(2.3rem,5.5vw,3.8rem);margin-bottom:20px}
+.hero p{color:var(--mut);font-size:1.1rem;margin-bottom:32px;max-width:520px}
+.cta{display:flex;gap:14px;flex-wrap:wrap}
+.stats{display:flex;gap:36px;margin-top:44px;flex-wrap:wrap}
+.stats b{display:block;font-family:'Space Grotesk';font-size:1.8rem}
+.stats span{font-size:.82rem;color:var(--mut)}
+
+/* dashboard mock */
+.dash{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.dash-h{display:flex;justify-content:space-between;font-size:.8rem;color:var(--mut);margin-bottom:16px}
+.live{color:var(--ac);display:flex;align-items:center;gap:6px}
+.live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ac);animation:pulse 1.6s infinite}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi small{color:var(--mut);font-size:.72rem}
+.kpi b{display:block;font-family:'Space Grotesk';font-size:1.35rem}
+.kpi em{font-style:normal;font-size:.7rem}
+.ok{color:var(--ac)}.wn{color:var(--warn)}.bd{color:var(--bad)}
+.heat{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:8px;height:150px}
+.z{border-radius:10px;padding:10px;font-size:.72rem;font-weight:600;display:flex;align-items:flex-end;color:#fff}
+.z1{grid-row:1/3;background:linear-gradient(135deg,#ffb02055,#ff5d5d66);border:1px solid #ff5d5d88}
+.z2{background:#2ee6a622;border:1px solid #2ee6a666}
+.z3{background:#3ba8ff22;border:1px solid #3ba8ff66}
+.alert{margin-top:12px;background:#ff5d5d14;border:1px solid #ff5d5d55;border-radius:10px;padding:10px 12px;font-size:.78rem;display:flex;gap:8px}
+
+/* cards */
+.grid{display:grid;gap:20px;margin-top:48px}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;transition:.3s}
+.card:hover{border-color:#2ee6a655;transform:translateY(-4px)}
+.ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:1.3rem;background:linear-gradient(135deg,#2ee6a622,#3ba8ff22);margin-bottom:18px}
+.card h3{font-size:1.15rem;margin-bottom:8px}
+.card p{color:var(--mut);font-size:.93rem}
+.alt{background:var(--bg2);border-block:1px solid var(--line)}
+
+/* flow */
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:48px;counter-reset:s}
+.step{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 16px;text-align:center;position:relative}
+.step::before{counter-increment:s;content:counter(s);position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:28px;height:28px;border-radius:50%;background:var(--ac);color:#04110c;font-weight:700;font-size:.85rem;display:grid;place-items:center}
+.step b{display:block;margin-bottom:6px;font-size:.95rem}
+.step code{font-size:.75rem;color:var(--ac2);word-break:break-all}
+.step p{font-size:.8rem;color:var(--mut);margin-top:6px}
+
+/* tech */
+.chips{display:flex;flex-wrap:wrap;gap:12px;margin-top:40px}
+.chip{padding:10px 20px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:.9rem;font-weight:500}
+.chip span{color:var(--mut);font-weight:400;margin-left:6px;font-size:.8rem}
+
+/* plano */
+.plan{margin-top:40px;background:#fff;border-radius:16px;padding:12px;border:1px solid var(--line)}
+.plan img{width:100%;display:block;border-radius:8px}
+.plan .ph{display:none;padding:60px 20px;text-align:center;color:#556;font-size:.9rem}
+
+/* db */
+.code{background:#070b0f;border:1px solid var(--line);border-radius:14px;padding:22px;font:.82rem/1.7 ui-monospace,Menlo,Consolas,monospace;color:#b7c4d1;overflow-x:auto;margin-top:48px}
+.code .k{color:var(--ac2)}.code .f{color:var(--ac)}.code .c{color:#5c6b7a}
+
+/* timeline */
+.tl{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:48px}
+.sp{border-top:3px solid var(--ac);background:var(--card);border-radius:0 0 14px 14px;padding:22px}
+.sp:nth-child(2){border-color:var(--ac2)}.sp:nth-child(3){border-color:var(--warn)}.sp:nth-child(4){border-color:#b78bff}
+.sp small{color:var(--mut);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase}
+.sp h3{font-size:1.05rem;margin:6px 0 10px}
+.sp ul{list-style:none;font-size:.88rem;color:var(--mut)}
+.sp li{padding:3px 0}
+.sp li::before{content:"→ ";color:var(--ac)}
+
+/* team */
+.team{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:48px}
+.m{text-align:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 16px}
+.av{width:72px;height:72px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;font:700 1.4rem 'Space Grotesk';color:#04110c;background:linear-gradient(135deg,var(--ac),var(--ac2))}
+.m b{display:block;font-size:.98rem}
+.m span{font-size:.8rem;color:var(--mut)}
+.adv{text-align:center;margin-top:32px;color:var(--mut);font-size:.9rem}
+
+footer{border-top:1px solid var(--line);padding:40px 0;text-align:center;color:var(--mut);font-size:.85rem}
+footer img{height:0}
+
+.rv{opacity:0;transform:translateY(24px);transition:.7s}
+.rv.in{opacity:1;transform:none}
+@keyframes pulse{50%{opacity:.35}}
+
+@media(max-width:900px){
+  nav ul{display:none}
+  .hero .wrap,.g3,.g2,.tl{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr 1fr}
+  .team{grid-template-columns:1fr 1fr}
+  section{padding:70px 0}
+}
+@media(max-width:480px){.flow,.team{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a href="#inicio" class="logo"><i></i>SICA-IoT</a>
+    <ul>
+      <li><a href="#problema">Problema</a></li>
+      <li><a href="#solucion">Solución</a></li>
+      <li><a href="#tecnologia">Tecnología</a></li>
+      <li><a href="#plan">Plan</a></li>
+      <li><a href="#equipo">Equipo</a></li>
+    </ul>
+    <a href="#solucion" class="btn p" style="padding:9px 18px">Ver proyecto</a>
+  </div>
+</nav>
+
+<header class="hero" id="inicio">
+  <div class="wrap">
+    <div>
+      <span class="tag">Ingeniería de Software II · Bases de Datos Avanzadas</span>
+      <h1>Aire limpio, planta <span class="grad">más segura</span>.</h1>
+      <p>Sistema web de monitoreo y control automatizado de CO₂, temperatura y humedad para naves industriales, con sensores IoT, alertas en tiempo real y extractores que reaccionan solos.</p>
+      <div class="cta">
+        <a href="#solucion" class="btn p">Cómo funciona</a>
+        <a href="#plano" class="btn g">Ver plano de la nave</a>
+      </div>
+      <div class="stats">
+        <div><b>120×80 m</b><span>nave industrial</span></div>
+        <div><b>3</b><span>extractores automáticos</span></div>
+        <div><b>4</b><span>sprints Scrum</span></div>
+      </div>
+    </div>
+
+    <div class="dash rv" aria-label="Vista previa del panel de control">
+      <div class="dash-h"><span>Panel de Control de Planta</span><span class="live">En vivo</span></div>
+      <div class="kpis">
+        <div class="kpi"><small>CO₂</small><b>1,180 <small>ppm</small></b><em class="wn">▲ Elevado</em></div>
+        <div class="kpi"><small>Temperatura</small><b>31.4 °C</b><em class="wn">▲ +2.1 °C</em></div>
+        <div class="kpi"><small>Humedad</small><b>54 %</b><em class="ok">● Normal</em></div>
+      </div>
+      <div class="heat">
+        <div class="z z1">Zona de producción principal</div>
+        <div class="z z2">Almacén P. terminado</div>
+        <div class="z z3">Carga y descarga</div>
+      </div>
+      <div class="alert"><span>⚠️</span><span><b>Alerta activa:</b> CO₂ sobre umbral en producción principal. Extractor E-01 encendido.</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="problema">
+  <div class="wrap">
+    <span class="tag">El problema</span>
+    <h2>Techos altos, poco flujo de aire</h2>
+    <p class="lead">La maquinaria pesada restringe la ventilación natural. El CO₂ y el calor se acumulan, y los operadores de las líneas de ensamble lo sienten.</p>
+    <div class="grid g3">
+      <div class="card rv"><div class="ic">🌡️</div><h3>Fatiga térmica</h3><p>El calor de equipos y personal se queda atrapado en la nave y baja el rendimiento del turno.</p></div>
+      <div class="card rv"><div class="ic">🫁</div><h3>Acumulación de CO₂</h3><p>La mala ventilación eleva la concentración de gases y provoca dolores de cabeza en operadores.</p></div>
+      <div class="card rv"><div class="ic">📋</div><h3>Normativa</h3><p>Se requiere cumplir con las NOM de la STPS en condiciones térmicas y agentes contaminantes.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="solucion" class="alt">
+  <div class="wrap">
+    <span class="tag">La solución</span>
+    <h2>Del sensor al extractor en segundos</h2>
+    <p class="lead">Cada lectura viaja por un flujo validado y transaccional. Si supera el umbral de seguridad, el sistema actúa sin intervención humana.</p>
+    <div class="flow">
+      <div class="step rv"><b>Nodo IoT</b><p>ESP32 con sensores de CO₂, temperatura y humedad</p></div>
+      <div class="step rv"><b>API REST</b><p>FastAPI recibe y llama al procedimiento</p></div>
+      <div class="step rv"><b>Procedimiento</b><code>sp_registrar_lectura_industrial</code><p>Valida y guarda en transacción</p></div>
+      <div class="step rv"><b>Disparador</b><code>trg_verificar_umbral_critico</code><p>Genera alerta y activa relevadores</p></div>
+      <div class="step rv"><b>Panel web</b><code>vw_alertas_activas_zona</code><p>Alerta visual para el supervisor</p></div>
+    </div>
+
+    <div class="grid g3" style="margin-top:64px">
+      <div class="card rv"><div class="ic">🗺️</div><h3>Mapas de calor en vivo</h3><p>Visualiza el plano de la planta y detecta las zonas críticas de un vistazo.</p></div>
+      <div class="card rv"><div class="ic">🔔</div><h3>Alertas automáticas</h3><p>Avisos de ventilación o evacuación cuando se rebasan los umbrales normativos.</p></div>
+      <div class="card rv"><div class="ic">🌀</div><h3>Extractores autónomos</h3><p>Los extractores industriales se activan por relevadores sin parar la producción.</p></div>
+      <div class="card rv"><div class="ic">👥</div><h3>Perfiles por rol</h3><p>Gerencia, Supervisor y Mantenimiento con permisos y vistas distintas.</p></div>
+      <div class="card rv"><div class="ic">📈</div><h3>Histórico de incidentes</h3><p>Reportes de seguridad y promedios por turno para tomar decisiones.</p></div>
+      <div class="card rv"><div class="ic">🛡️</div><h3>Tolerancia a fallos</h3><p>Pensado para fallas de red en planta, con alta disponibilidad y seguridad.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="plano">
+  <div class="wrap">
+    <span class="tag">Plano de la nave</span>
+    <h2>Nodos y extractores distribuidos por zona</h2>
+    <p class="lead">Producción principal, almacén de materias primas, producto terminado, carga y descarga, y oficinas de control.</p>
+    <div class="plan rv">
+      <!-- Guarda el plano del anexo como assets/plano-nave.png -->
+      <img src="assets/plano-nave.jpg" alt="Plano de la nave industrial con nodos IoT y extractores" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <div class="ph">Coloca la imagen del plano en <b>assets/plano-nave.png</b></div>
+    </div>
+  </div>
+</section>
+
+<section id="tecnologia" class="alt">
+  <div class="wrap">
+    <span class="tag">Tecnología</span>
+    <h2>Un stack pensado para alto flujo de datos</h2>
+    <div class="chips">
+      <div class="chip">PostgreSQL<span>base de datos</span></div>
+      <div class="chip">Python · FastAPI<span>backend</span></div>
+      <div class="chip">React<span>frontend</span></div>
+      <div class="chip">C++<span>microcontroladores</span></div>
+      <div class="chip">ESP32 / PLC<span>hardware</span></div>
+      <div class="chip">Docker<span>despliegue</span></div>
+      <div class="chip">Git<span>control de versiones</span></div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card rv"><div class="ic">🗄️</div><h3>Bases de Datos Avanzadas</h3><p>Modelo normalizado a 3FN, transacciones ACID con rollback, bloqueos optimistas, índices B-Tree, roles con privilegios estrictos y vistas para dashboards.</p></div>
+      <div class="card rv"><div class="ic">🧩</div><h3>Ingeniería de Software II</h3><p>Scrum, modelado UML, arquitectura API REST con patrón MVC, mockups, plan de pruebas unitarias, de integración y de aceptación.</p></div>
+    </div>
+
+<pre class="code rv"><span class="c">-- Disparador: se ejecuta después de cada lectura</span>
+<span class="k">CREATE TRIGGER</span> <span class="f">trg_verificar_umbral_critico</span>
+<span class="k">AFTER INSERT ON</span> lecturas
+<span class="k">FOR EACH ROW EXECUTE FUNCTION</span> fn_verificar_umbral();
+
+<span class="c">-- Si CO₂ supera el límite: crea alerta y activa extractor</span></pre>
+  </div>
+</section>
+
+<section id="plan">
+  <div class="wrap">
+    <span class="tag">Plan de trabajo</span>
+    <h2>Cuatro sprints, un sistema operativo</h2>
+    <div class="tl">
+      <div class="sp rv"><small>Sprint 1</small><h3>Fundamentos</h3><ul><li>Prototipo IoT industrial</li><li>Modelo ER y 3FN</li></ul></div>
+      <div class="sp rv"><small>Sprint 2</small><h3>Diseño</h3><ul><li>Arquitectura y mockups</li><li>Procedimientos y disparadores</li></ul></div>
+      <div class="sp rv"><small>Sprint 3</small><h3>Construcción</h3><ul><li>API REST y frontend</li><li>Pruebas unitarias e índices</li></ul></div>
+      <div class="sp rv"><small>Sprint 4</small><h3>Entrega</h3><ul><li>Integración en planta</li><li>Pruebas de estrés</li><li>Documentación y despliegue</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <span class="tag">Entregables</span>
+    <h2>Lo que vamos a presentar</h2>
+    <div class="grid g3">
+      <div class="card rv"><h3>📄 Documento técnico</h3><p>Proyecto completo con modelos UML y diccionario de datos.</p></div>
+      <div class="card rv"><h3>🧾 Script SQL</h3><p>Tablas, datos de prueba, vistas, procedimientos, disparadores e índices.</p></div>
+      <div class="card rv"><h3>⚡ Reporte de optimización</h3><p>Tiempos de consulta antes y después de los índices.</p></div>
+      <div class="card rv"><h3>💻 Código fuente</h3><p>Repositorio Git con política de ramas y estándares.</p></div>
+      <div class="card rv"><h3>🧪 Reporte de pruebas</h3><p>Pruebas de software y hardware.</p></div>
+      <div class="card rv"><h3>🎬 Demo final</h3><p>Simulación operativa de la nave industrial.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="equipo">
+  <div class="wrap">
+    <span class="tag">Equipo</span>
+    <h2>Quiénes lo construimos</h2>
+    <div class="team">
+      <div class="m rv"><div class="av">RL</div><b>Rodrigo López Ramírez</b><span>Ing. Sistemas Computacionales</span></div>
+      <div class="m rv"><div class="av">JM</div><b>Joel Morales Acosta</b><span>Ing. Sistemas Computacionales</span></div>
+      <div class="m rv"><div class="av">RL</div><b>Raul Francisco Leyson Vergara</b><span>Ing. Sistemas Computacionales</span></div>
+      <div class="m rv"><div class="av">RE</div><b>Rafael Rodrigo Espinoza Norzagaray</b><span>Ing. Sistemas Computacionales</span></div>
+    </div>
+    <p class="adv">Asesor: M. en C. José Torres Medina · Universidad Autónoma Indígena de México</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>© 2026 SICA-IoT Industrial · Proyecto académico UAIM · Octubre 2026</p>
+  </div>
+</footer>
+
+<script>
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.rv').forEach((el,i)=>{el.style.transitionDelay=(i%3)*80+'ms';io.observe(el)});
+</script>
+</body>
+</html>
