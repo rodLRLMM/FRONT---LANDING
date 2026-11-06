@@ -42,6 +42,13 @@ const equipo = [
   "Rafael Rodrigo Espinoza Norzagaray",
 ]
 
+const productos = [
+  { id: "p1", name: "Nodo IoT ESP32 (Kit Base)", price: 1250.00 },
+  { id: "p2", name: "Sensor de CO2 Industrial", price: 2100.00 },
+  { id: "p3", name: "Extractor Automatizado 24V", price: 3400.00 },
+  { id: "p4", name: "Módulo de Relevadores 4 Ch", price: 450.00 },
+]
+
 const Label = ({ children }: { children: React.ReactNode }) => (
   <p className="font-mono text-xs uppercase tracking-widest text-primary mb-3">{children}</p>
 )
@@ -57,8 +64,9 @@ export default function Home() {
             <a href="#problema" className="hover:text-foreground">Problema</a>
             <a href="#sistema" className="hover:text-foreground">Sistema</a>
             <a href="#plano" className="hover:text-foreground">Plano</a>
-             <a href="#sucursales-home" className="hover:text-foreground">Sucursales</a>
+            <a href="/sucursales" className="hover:text-foreground">Sucursales</a>
             <a href="#plan" className="hover:text-foreground">Plan</a>
+            <a href="/comprar" className="hover:text-foreground">Comprar</a>
             <a href="#equipo" className="hover:text-foreground">Equipo</a>
           </nav>
           <Button size="sm" asChild><a href="#sistema">Ver sistema</a></Button>
@@ -272,6 +280,27 @@ export default function Home() {
             </AccordionItem>
           ))}
         </Accordion>
+      </section>
+
+      {/* COMPRAR */}
+      <section id="comprar" className="mx-auto max-w-6xl px-6 py-20">
+        <Label>Comprar</Label>
+        <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Productos</h2>
+        <div className="mt-10 grid gap-4 md:grid-cols-4">
+          {productos.map((p) => (
+            <Card key={p.id} className="shadow-none">
+              <CardHeader>
+                <CardTitle>{p.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg font-bold">${p.price.toFixed(2)}</p>
+                <Button className="mt-4" asChild>
+                  <a href="/comprar">Comprar</a>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </section>
 
       {/* EQUIPO */}
