@@ -150,7 +150,7 @@ export default function App() {
           {flujo.map((f, i) => (
             <li key={f.n} className={`p-5 ${i > 0 ? "border-t md:border-l md:border-t-0" : ""}`}>
               <p className="font-mono text-xs text-primary">{f.n}</p>
-              <p className="mt-2 break-words font-mono text-sm font-medium">{f.t}</p>
+              <p className="mt-2 wrap-break-words font-mono text-sm font-medium">{f.t}</p>
               <p className="mt-2 text-sm text-muted-foreground">{f.d}</p>
             </li>
           ))}
